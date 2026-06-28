@@ -26,3 +26,19 @@ Each entry follows the format below. Keep it short. Two or three sentences per h
 - Take notes against three questions: what they measured, what they found, what they did not do that this project will do.
 
 ---
+## 2026-06-28  
+
+### M1 Lab Build Progress
+- Created VMnet2 isolated network in VMware Workstation Pro 17
+- Provisioned four VMs: wazuh-manager, ubuntu-target, cowrie-honeypot, kali-attacker (existing 2025.2 install repurposed)
+- Configured static IPs across 192.168.56.0/24
+- Resolved layer-2 connectivity issue (VMs were initially on Host-only/VMnet1 instead of VMnet2)
+- All four VMs verified reachable via ping
+- Baseline snapshots taken on all four VMs
+
+### Next
+- Add NAT adapters for internet access during installs
+- Install Wazuh manager all-in-one stack on wazuh-mgr
+- Install Cowrie on cowrie-hp
+- Configure Auditd on linux-target
+- Install Atomic Red Team on kali-atk
