@@ -3,7 +3,6 @@
 Daily journal of work completed on the MSc Cybersecurity dissertation:
 *Evaluating ATT&CK-Based Detection Engineering for Linux Systems Using Cowrie, Auditd, and Wazuh Telemetry.*
 
-Each entry follows the format below. Keep it short. Two or three sentences per heading is fine.
 
 ---
 
@@ -25,7 +24,6 @@ Each entry follows the format below. Keep it short. Two or three sentences per h
 - Read Winkler and Sharma (2025), *Proactive Threat Detection in Enterprise Systems Using Wazuh: A MITRE ATT&CK Evaluation*, in full.
 - Take notes against three questions: what they measured, what they found, what they did not do that this project will do.
 
----
 ## 2026-06-28  
 
 ### M1 Lab Build Progress
@@ -42,3 +40,6 @@ Each entry follows the format below. Keep it short. Two or three sentences per h
 - Install Cowrie on cowrie-hp
 - Configure Auditd on linux-target
 - Install Atomic Red Team on kali-atk
+
+
+---
