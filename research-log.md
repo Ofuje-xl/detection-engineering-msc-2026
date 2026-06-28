@@ -6,7 +6,7 @@ Daily journal of work completed on the MSc Cybersecurity dissertation:
 
 ---
 
-## 2026-06-07: Day 1
+## 2026-06-07
 
 **What I did**
 - Created the GitHub repository.
@@ -41,5 +41,24 @@ Daily journal of work completed on the MSc Cybersecurity dissertation:
 - Configure Auditd on linux-target
 - Install Atomic Red Team on kali-atk
 
+## 2026-06-29 
+
+### What I worked on
+- Added second network adapter (NAT/VMnet8) to all four VMs for internet access
+- Updated netplan configs on three Ubuntu VMs to bring up both interfaces simultaneously
+- Verified dual-network operation: lab network (VMnet2) for inter-VM traffic, NAT for outbound internet
+
+### What I learned / problems hit
+- Ubuntu 24.04 netplan does not auto-configure new network interfaces detected after install.
+  Must explicitly add the new interface to /etc/netplan/50-cloud-init.yaml and run `netplan apply`.
+- Kali (NetworkManager) handles new interfaces automatically. Ubuntu (netplan/networkd) does not.
+- Important: lab interface in netplan should have NO gateway or nameservers configured.
+  The NAT interface's DHCP provides the default route and DNS for the whole VM.
+
+### Next
+- Install Wazuh manager (all-in-one) on wazuh-mgr
+- Install Auditd configuration on linux-target
+- Install Cowrie on cowrie-hp
+- Install Atomic Red Team on kali-atk
 
 ---
