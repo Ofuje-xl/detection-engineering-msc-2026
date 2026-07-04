@@ -60,5 +60,52 @@ Daily journal of work completed on the MSc Cybersecurity dissertation:
 - Install Auditd configuration on linux-target
 - Install Cowrie on cowrie-hp
 - Install Atomic Red Team on kali-atk
+  
+## 2026-07-04 (afternoon)
 
+### Pattern: Wazuh systemd startup timeouts on constrained hardware
+
+After resuming lab work following several days of inactivity, all three
+Wazuh services (manager, indexer, dashboard) failed to start with systemd
+timeout errors. The packaged systemd unit files assume production-class
+hardware; on this lab VM (6GB RAM, 2 vCPU, sharing a laptop host with three
+other running VMs) each service's initialisation sequence exceeds the default
+timeouts, causing systemd to terminate services mid-startup even though the
+underlying processes are healthy.
+
+**Diagnostic pattern:**
+- `systemctl status` reports Active: failed with "Failed with result 'timeout'"
+- `journalctl -u <service>` shows sub-components successfully reporting "Started"
+- `ps aux | grep -i wazuh` shows Wazuh processes still running (orphaned)
+- The service is actually healthy; systemd's expectations are wrong
+
+**Overrides applied** (all via /etc/systemd/system/<service>.service.d/override.conf):
+
+| Service          | Default | Override | Rationale |
+|------------------|---------|----------|-----------|
+| wazuh-manager    | 45s     | 300s     | Sequential daemon startup on constrained CPU |
+| wazuh-dashboard  | 90s     | 300s     | Node.js startup + indexer discovery |
+| wazuh-indexer    | 90s     | 600s     | JVM warm-up on modest RAM |
+
+**Broader operational relevance:**
+This pattern is likely to recur in any small-team or MSP deployment of Wazuh
+on modest hardware. Vendor defaults are calibrated for production-class hosts;
+lab and SME contexts routinely diverge from those assumptions. This gap between
+vendor default configuration and realistic deployment environments is worth
+flagging in the practical recommendations chapter of the dissertation as a
+Wazuh deployment consideration for SMEs, consistent with the broader argument
+about open-source SIEM viability for resource-constrained organisations
+(Manzoor et al., 2024).
+
+**Transferable practice for future deployments:**
+When deploying a stack of related services to a new environment, run a
+one-shot systemd audit up front:
+`for svc in <services>; do systemctl cat $svc | grep -iE "Timeout|Restart|LimitNOFILE"; done`
+Then apply generous overrides before first start rather than reactively.
+
+### Next
+- Register first Wazuh agent on linux-target
+- Verify end-to-end log flow from linux-target to dashboard
+- Snapshot wazuh-fully-operational-all-timeouts-fixed
+- Close out M1
 ---
