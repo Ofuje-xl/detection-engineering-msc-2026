@@ -108,4 +108,45 @@ Then apply generous overrides before first start rather than reactively.
 - Verify end-to-end log flow from linux-target to dashboard
 - Snapshot wazuh-fully-operational-all-timeouts-fixed
 - Close out M1
+## 2026-07-04 (evening) — M1 CLOSED
+
+### Milestone status
+- Planned: 01 Jul 2026
+- Actual: 04 Jul 2026 (3 days over, within tolerance)
+- Slippage caused by the three failure patterns documented in this session
+
+### What's operational
+- wazuh-mgr: manager, indexer, dashboard, filebeat all stable with timeout overrides
+- linux-target: Wazuh agent 4.13.1 registered as agent ID 001, reading from journald
+- End-to-end log flow verified: SSH failures from kali-atk (192.168.56.40) triggering rules 5503 and 5710 in alerts.log
+
+### Pattern 2: Silent detection failure via disk exhaustion
+
+After the timeout fixes, SSH failure tests from Kali initially appeared not to be detected. Diagnosis revealed the wazuh-mgr root filesystem was 100% full. Root cause: Wazuh's default install enables the Vulnerability Detection module, which downloaded 15 GB of CVE databases to `/var/ossec/queue/vd` and `/var/ossec/queue/vd_updater`, exhausting the 29 GB root partition.
+
+When disk pressure hit critical, OpenSearch flipped indices to `read_only_allow_delete` mode, silently blocking new event indexing. Every observability metric lied — services showed Active in systemd, dashboard widgets rendered, agents reported connected — but no new alerts were being generated. Wazuh's own Rule 1007 detected the disk-full condition but the alert was buried in low-severity noise.
+
+Fix applied:
+- Disabled Vulnerability Detection in ossec.conf (`<enabled>no</enabled>`)
+- Deleted contents of `/var/ossec/queue/vd/*` and `/var/ossec/queue/vd_updater/*`
+- Released OpenSearch read-only lock via API
+- Disk usage dropped from 100% to 70%; 8.2 GB free
+
+### Pattern 3: Signal-to-noise in default alert visibility
+
+Even after the pipeline was working, SSH failure alerts weren't obviously visible in the default dashboard view because they were drowned in level-3 sudo and PAM administrative alerts from routine admin activity. Dashboard needed explicit filtering (`rule.id: 5710` or `data.srcip: 192.168.56.40`) to surface security-relevant events.
+
+This is directly relevant to the dissertation's false-positive contribution: a "functioning" SIEM without noise tuning is operationally unusable. Alert volume without prioritisation defeats the purpose of centralised monitoring.
+
+### MSP-track relevance across all three patterns
+- Vendor defaults calibrated for production hosts, not SME reality (Manzoor et al., 2024)
+- Silent failure modes where every observability metric lies except the one that matters
+- Ship-defaults produce alert volumes that hide real signal without deliberate tuning
+
+Deployment playbook implications for future MSP client engagements: systemd hardening audit up front, generous disk provisioning with external monitoring, mandatory post-deployment detection validation step with known-safe test events, and rule-tuning phase before handing over to analyst use.
+
+### Next session
+- Install Wazuh agent on cowrie-hp
+- Configure Auditd rules on linux-target for the 10 target ATT&CK techniques
+- Verify Auditd-sourced events appear in dashboard
 ---
