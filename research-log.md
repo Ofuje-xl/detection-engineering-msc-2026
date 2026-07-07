@@ -166,4 +166,46 @@ Using an established community-maintained ruleset mirrors current professional d
 - Pull Neo23x0 ruleset, review, deploy
 - Tell Wazuh agent to read audit.log
 - Verify one Auditd-sourced event appears in dashboard
+
+## 2026-07-07 (afternoon) — Auditd deployed on linux-target
+
+Deployed Neo23x0's community-maintained Auditd ruleset (v-latest, 225 rules
+from https://github.com/Neo23x0/auditd) into /etc/audit/rules.d/neo23x0.rules.
+206 rules loaded cleanly into the kernel; 19 silently skipped for kernel
+syscall availability (SELinux-specific paths and RHEL-specific rules not
+applicable to Ubuntu 24.04), using the ruleset's `-i` graceful fallback flag.
+
+Added four custom rules for T1098.004 (SSH authorized_keys) and T1070.003
+(bash_history) in /etc/audit/rules.d/99-custom-msc.rules:
+- -w /root/.ssh/authorized_keys -p wa -k ssh_key_change
+- -w /home/jeffrey/.ssh/authorized_keys -p wa -k ssh_key_change
+- -w /root/.bash_history -p wa -k history_tamper
+- -w /home/jeffrey/.bash_history -p wa -k history_tamper
+
+Updated Wazuh agent config (/var/ossec/etc/ossec.conf) with localfile block
+to read /var/log/audit/audit.log with the `audit` log format. Agent restarted
+to pick up the new source.
+
+End-to-end validation: `sudo useradd testauditor` generated user-creation
+alerts tagged with Neo23x0's `identity` key, visible in Wazuh manager's
+alerts.log within seconds. Confirmed all seven links of the detection pipeline
+work: kernel-level auditing → Neo23x0 rule match → local audit.log write →
+Wazuh agent read → network forwarding → manager rule match → alerts.log
+storage.
+
+### Design rationale on rule scope
+Custom rules watch specific file paths rather than directory trees, reflecting
+Auditd's non-recursive directory-watch semantics. In an MSP production
+deployment this would require per-user rule generation via templating
+(Ansible/Jinja2), as the Neo23x0 documentation notes. For this project only
+the `jeffrey` and `root` user paths are watched, which is sufficient for the
+technique catalogue evaluation.
+
+### Notable finding for methodology chapter
+Neo23x0's design philosophy statement (rules provide broad, high-fidelity
+telemetry; detection intelligence belongs in the SIEM/Sigma layer, not the
+audit ruleset) directly matches this project's two-layer architecture: Auditd
+as broad kernel-level sensor, Wazuh as intelligence and alerting layer. This
+citation will support the methodology chapter's separation-of-concerns
+argument for the lab design.
 ---
