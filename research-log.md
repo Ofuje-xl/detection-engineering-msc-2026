@@ -208,4 +208,26 @@ audit ruleset) directly matches this project's two-layer architecture: Auditd
 as broad kernel-level sensor, Wazuh as intelligence and alerting layer. This
 citation will support the methodology chapter's separation-of-concerns
 argument for the lab design.
+
+## 2026-07-07 (evening) — Auditd rule validation and the file-descriptor quirk
+
+Verified custom rules `history_tamper` and `ssh_key_change` fire correctly
+on file writes to their target paths. During validation, discovered that
+Auditd file watches (`-w`) do not apply retroactively to file descriptors
+opened by processes that predate the rule installation. This means the
+first shell session used for validation (which inherited bash's already-open
+handle on .bash_history from before rule load) produced no audit events on
+appends, while a fresh SSH session opened after rule load fired the rule
+immediately.
+
+Operational implication for detection engineering: audit rule deployment
+must be paired with either a fresh service restart or session recycling
+in any environment where processes might hold long-lived file descriptors.
+In production MSP deployments this typically means: deploy rules during
+maintenance windows when service restarts are scheduled, or accept a rolling
+enforcement window as sessions naturally cycle.
+
+Verification evidence: audit record 1783462689.718:2755 shows bash (pid 2712)
+opening /home/jeffrey/.bash_history via syscall 257 (openat), tagged with
+key="history_tamper".
 ---
