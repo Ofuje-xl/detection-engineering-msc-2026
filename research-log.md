@@ -149,4 +149,21 @@ Deployment playbook implications for future MSP client engagements: systemd hard
 - Install Wazuh agent on cowrie-hp
 - Configure Auditd rules on linux-target for the 10 target ATT&CK techniques
 - Verify Auditd-sourced events appear in dashboard
+
+## 2026-07-07 (morning) — Week 5 continuation
+
+### What I worked on
+- Installed Wazuh agent on cowrie-hp (agent ID 002, Active)
+- Verified three agents in manager: wazuh-mgr (server), linux-target, cowrie-hp
+- Started Auditd installation on linux-target
+- Chose Neo23x0 open-source ruleset as base, tuned for the 10 target ATT&CK techniques
+
+### Rationale for Neo23x0
+Using an established community-maintained ruleset mirrors current professional detection engineering practice and matches the methodology a real MSP would deploy at a client site.
+
+### Next
+- Confirm Auditd is running on linux-target
+- Pull Neo23x0 ruleset, review, deploy
+- Tell Wazuh agent to read audit.log
+- Verify one Auditd-sourced event appears in dashboard
 ---
