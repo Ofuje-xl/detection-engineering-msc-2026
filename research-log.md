@@ -230,4 +230,53 @@ enforcement window as sessions naturally cycle.
 Verification evidence: audit record 1783462689.718:2755 shows bash (pid 2712)
 opening /home/jeffrey/.bash_history via syscall 257 (openat), tagged with
 key="history_tamper".
+
+## 2026-07-08 (morning) — Cowrie deployed via Docker
+
+Abandoned pip installation after five failure modes across three Cowrie
+versions (3.0.0, 2.9.0, 2.7.0). Deployed via official cowrie/cowrie Docker
+image with volume mounts to /opt/cowrie/{etc,var} on the host.
+
+Runtime UID discovery: container declares cowrie:1001 in /etc/passwd but
+actually runs as UID 999 at runtime (entrypoint drops privileges to a
+different account). Diagnosed by running Cowrie with chmod 777 to identify
+which UID Cowrie's process actually wrote files as. Fixed with
+chown -R 999:999 /opt/cowrie and 755 permissions.
+
+Known limitation: Cowrie 3.0.5's interactive shell hangs after successful
+authentication when connecting from modern OpenSSH clients (both host and
+Kali 2025.2). Protocol-layer capture (connections, KEX, credentials, hassh
+fingerprints, environment vars) works completely; post-login command capture
+(cowrie.command.input) does not fire in current version.
+
+For dissertation methodology: this affects T1059.004 Unix Shell coverage
+via Cowrie only. Command execution on the target host is still covered by
+Auditd on linux-target, so the multi-layer telemetry contribution
+(protocol layer via Cowrie for auth events, system-call layer via Auditd
+for post-login) remains intact. The limitation will be documented in the
+methodology and evaluation chapters.
+
+## 2026-07-08 (afternoon) — Custom Wazuh rules for Cowrie honeypot
+
+Wazuh 4.13 ships no built-in Cowrie decoders or rules. Verified via
+temporary archive logging (logall=yes) that Cowrie events reach the manager
+correctly but don't fire alerts because no rule matches them.
+
+Added four custom rules in /var/ossec/etc/rules/local_rules.xml:
+- 100010 (level 0): Cowrie event group parent, matches eventid ^cowrie\.
+- 100011 (level 8): cowrie.login.failed → MITRE T1110.001
+- 100012 (level 10): cowrie.login.success → MITRE T1078.003, T1110.001
+- 100013 (level 5): cowrie.session.connect
+
+Verified end-to-end: SSH from kali-atk (192.168.56.40) to cowrie-hp:2222
+with credentials root/password123 fires rules 100013 and 100012 in
+alerts.log within seconds. Alert descriptions correctly interpolate
+src_ip and username via Wazuh variable substitution.
+
+For MSP-track thinking: custom rules for third-party log sources are
+routine at client sites. Every new data source (application logs, custom
+appliances, honeypots) requires rule authoring or vendor rule packs.
+Documenting rules as part of the deployment artefact (in this case,
+committed to the project GitHub repo) is standard operational practice.
+
 ---
