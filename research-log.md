@@ -279,4 +279,25 @@ appliances, honeypots) requires rule authoring or vendor rule packs.
 Documenting rules as part of the deployment artefact (in this case,
 committed to the project GitHub repo) is standard operational practice.
 
+## 2026-07-08 (evening) — Atomic Red Team installed + coverage audit
+
+Installed PowerShell 7.6.2 and Invoke-AtomicRedTeam 2.3.0 module on kali-atk.
+Cloned atomics library (417MB, shallow clone) to ~/AtomicRedTeam.
+
+Audited Atomic Red Team Linux coverage for all 10 target techniques:
+- 7 fully covered: T1078.003, T1059.004 (17 tests), T1053.003, T1136.001,
+  T1070.003 (10 tests), T1082, T1105
+- 3 gaps requiring custom atomic tests:
+  - T1110.001: native Linux tests are local sudo brute-force, not remote SSH
+    (which is the project's actual threat model)
+  - T1098.004 SSH Authorized Keys: 0 Linux tests
+  - T1070.002 Clear Linux Logs: no folder exists; parent T1070 has no
+    relevant Linux log-clearing tests either
+
+Finding for methodology/discussion: the industry-standard attack simulation
+framework has Linux coverage gaps for specific post-compromise techniques.
+An SME relying solely on off-the-shelf Atomic Red Team would have blind spots
+for remote SSH brute force, SSH key persistence, and Linux log clearing.
+Custom atomic tests (same YAML structure) will be authored and published to
+the project GitHub repo, potentially contributed upstream.
 ---
