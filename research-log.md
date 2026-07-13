@@ -334,4 +334,24 @@ caught by defaults, others will need custom rules. T1136.001 is a
   resolves to /root, not the user's clone location.
 
 T1136.001: DETECTED (baseline ruleset)
+
+
+## 2026-07-13 (session 2) — Baseline evaluation underway
+
+- Lab recovered after downtime: linux-target agent had disconnected, restarted cleanly, all endpoints Active
+- Installed PowerShell 7.6.3 + Invoke-AtomicRedTeam on linux-target (AllUsers scope so root can run elevation-required tests)
+- Cloned atomics library to linux-target (~/AtomicRedTeam)
+- T1136.001 executed and DETECTED (rule 5902, level 8) — baseline ruleset coverage. Terminal evidence captured.
+- Set up evidence folder structure; deciding between terminal-only vs terminal+dashboard figures
+- T1059.004 inspected (test 1, GUID 7e7ac3ed...), not yet executed — next session
+
+### Method now established
+Repeatable per-technique workflow: inspect test with -ShowDetails → set up 3-window
+watch (alerts / audit telemetry / execution) → run → capture evidence → record result
+category (baseline-detected vs captured-not-alerted vs undetected).
+
+### Next session
+- Run T1059.004-1, capture three-window evidence
+- Continue through remaining techniques
+- Decide terminal vs dashboard figure style
 ---
