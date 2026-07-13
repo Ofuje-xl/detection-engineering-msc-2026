@@ -300,4 +300,38 @@ An SME relying solely on off-the-shelf Atomic Red Team would have blind spots
 for remote SSH brute force, SSH key persistence, and Linux log clearing.
 Custom atomic tests (same YAML structure) will be authored and published to
 the project GitHub repo, potentially contributed upstream.
+
+## 2026-07-13 — First end-to-end attack-to-detection cycle validated
+
+Executed first real Atomic Red Team test against linux-target: T1136.001-1
+(Create Account: Local Account), GUID 40d8eabd-e394-46f6-8785-b9bfa1d011d2.
+
+Command executed: useradd -M -N -r -s /bin/bash -c evil_account evil_user
+Result: exit code 0, user created successfully.
+
+Detection: Wazuh fired Rule 5902 (level 8) "New user added to the system"
+within seconds, extracting username (evil_user), UID (999), home, and shell.
+Alert auto-tagged with PCI-DSS, GDPR, HIPAA, NIST compliance mappings.
+
+Full pipeline confirmed working end to end: Atomic Red Team → useradd →
+journald/Auditd capture → Wazuh agent → manager → rule match → alert.
+
+### Notable finding
+Detection came from Wazuh's built-in journald rule 5902, not from the
+Neo23x0 Auditd `identity` watch (which was also monitoring /etc/passwd).
+For this technique the default ruleset already provides coverage; the
+Auditd layer is redundant here. This is exactly the baseline-vs-custom
+distinction the evaluation is designed to measure — some techniques are
+caught by defaults, others will need custom rules. T1136.001 is a
+"default-covered" technique.
+
+### Operational learnings
+- Invoke-AtomicRedTeam module must be installed AllUsers scope (or run
+  under the same user that installed it) so root can load it plus its
+  powershell-yaml dependency for elevation-required tests.
+- Atomics folder path must be passed explicitly (-PathToAtomicsFolder)
+  when running as root, since it defaults to $HOME/AtomicRedTeam which
+  resolves to /root, not the user's clone location.
+
+T1136.001: DETECTED (baseline ruleset)
 ---
