@@ -354,4 +354,36 @@ category (baseline-detected vs captured-not-alerted vs undetected).
 - Run T1059.004-1, capture three-window evidence
 - Continue through remaining techniques
 - Decide terminal vs dashboard figure style
+
+## 2026-07-13 (session 2 cont.) — T1059.004 evaluated: detection gap found
+
+Executed T1059.004-1 (Create and Execute Bash Shell Script),
+GUID 7e7ac3ed-f795-4fa5-b711-09d6fbe9b873.
+
+Attack: created /tmp/art.sh, chmod +x, executed (printed message, pinged
+8.8.8.8). Exit code 0.
+
+RESULT: Captured, not alerted.
+- Auditd captured the full chain at syscall level: chmod, sh execution,
+  ping — all tagged process_creation by Neo23x0 rules, with complete
+  process lineage (ppid/pid, AUID=jeffrey escalated to UID=root).
+- Wazuh baseline ruleset generated NO security alert. Only level-3
+  sudo/PAM noise from the operator's own commands appeared in alerts.log.
+
+### Significance
+Second result category established. Contrast with T1136.001:
+- T1136.001: telemetry captured AND baseline-alerted (rule 5902, level 8)
+- T1059.004: telemetry captured, NOT baseline-alerted
+
+This demonstrates the gap between telemetry availability and alert
+generation — the core justification for custom detection rule development
+(Objective 4). A small team on default Wazuh would have this attack fully
+logged but receive no notification. T1059.004 is a custom-rule candidate.
+
+Evidence captured: attack execution, audit.log execve chain, absence of
+security alert.
+
+### Running coverage tally
+- T1136.001 Create Account: BASELINE-DETECTED
+- T1059.004 Unix Shell: CAPTURED-NOT-ALERTED (custom rule candidate)
 ---
