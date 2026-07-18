@@ -1,0 +1,22 @@
+title: Cron Persistence via Write to Cron Directory
+id: a1e5f3c2-8b47-4d6e-9f21-3c7a0e2b1d54
+status: experimental
+description: Detects file creation or modification within Linux cron directories, a common persistence mechanism. Maps to auditd events tagged with the "cron" key.
+author: Jeffrey Ofuje Adegoke
+date: 2026/07/17
+references:
+  - https://attack.mitre.org/techniques/T1053/003/
+logsource:
+  product: linux
+  service: auditd
+detection:
+  selection:
+    type: 'SYSCALL'
+    key: 'cron'
+  condition: selection
+falsepositives:
+  - Legitimate administrator or package-manager writes to cron directories (e.g. installing a package that adds a cron job)
+level: high
+tags:
+  - attack.persistence
+  - attack.t1053.003
