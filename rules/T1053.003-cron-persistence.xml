@@ -1,0 +1,23 @@
+<!--
+  Detection: Cron persistence (MITRE ATT&CK T1053.003 - Scheduled Task/Job: Cron)
+  Author: Jeffrey Ofuje Adegoke
+  Telemetry source: Auditd (system-call layer), event tagged key="cron" by the Neo23x0 ruleset
+
+  Rationale:
+  Baseline Wazuh 4.13 decodes the auditd event and correctly extracts audit.key="cron",
+  but scores it level 0 (rule 80700, "Audit: Messages grouped") - i.e. no alert is raised.
+  A write to a cron directory is a common persistence mechanism, so this custom rule
+  elevates any auditd event carrying the "cron" key to level 10.
+
+  Deployed in: /var/ossec/etc/rules/local_rules.xml on wazuh-mgr
+-->
+<group name="audit,cron_persistence,">
+  <rule id="100020" level="10">
+    <if_group>audit</if_group>
+    <field name="audit.key">cron</field>
+    <description>Cron persistence: file written to a cron directory (T1053.003)</description>
+    <mitre>
+      <id>T1053.003</id>
+    </mitre>
+  </rule>
+</group>
