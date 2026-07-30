@@ -1,0 +1,43 @@
+jeffrey@wazuh-mgr:~$ echo 'type=SYSCALL msg=audit(1785427522.012:5992): arch=c000003e syscall=59 success=yes exit=0 a0=5b95f5e26678 a1=5b95f5e265d0 a2=5b95f5e265f8 a3=8 items=2 ppid=4823 pid=4824 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=111 comm="ping" exe="/usr/bin/ping" subj=unconfined key="process_creation"' | sudo /var/ossec/bin/wazuh-logtest
+Starting wazuh-logtest v4.13.1
+Type one log per line
+
+
+**Phase 1: Completed pre-decoding.
+        full event: 'type=SYSCALL msg=audit(1785427522.012:5992): arch=c000003e syscall=59 success=yes exit=0 a0=5b95f5e26678 a1=5b95f5e265d0 a2=5b95f5e265f8 a3=8 items=2 ppid=4823 pid=4824 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=111 comm="ping" exe="/usr/bin/ping" subj=unconfined key="process_creation"'
+
+**Phase 2: Completed decoding.
+        name: 'auditd'
+        parent: 'auditd'
+        audit.arch: 'c000003e'
+        audit.auid: '1000'
+        audit.command: 'ping'
+        audit.egid: '0'
+        audit.euid: '0'
+        audit.exe: '/usr/bin/ping'
+        audit.exit: '0'
+        audit.fsgid: '0'
+        audit.fsuid: '0'
+        audit.gid: '0'
+        audit.id: '5992'
+        audit.key: 'process_creation'
+        audit.pid: '4824'
+        audit.ppid: '4823'
+        audit.session: '111'
+        audit.sgid: '0'
+        audit.success: 'yes'
+        audit.suid: '0'
+        audit.syscall: '59'
+        audit.tty: 'pts1'
+        audit.type: 'SYSCALL'
+        audit.uid: '0'
+
+**Phase 3: Completed filtering (rules).
+        id: '80700'
+        level: '0'
+        description: 'Audit: Messages grouped.'
+        groups: '['audit']'
+        firedtimes: '1'
+        mail: 'False'
+
+jeffrey@wazuh-mgr:~$
