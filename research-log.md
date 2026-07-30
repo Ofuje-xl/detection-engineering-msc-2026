@@ -386,4 +386,34 @@ security alert.
 ### Running coverage tally
 - T1136.001 Create Account: BASELINE-DETECTED
 - T1059.004 Unix Shell: CAPTURED-NOT-ALERTED (custom rule candidate)
+
+## 2026-07-30 — Custom rule for cron persistence now works
+
+Checked rule 100020 on the Wazuh manager. It turned out to be
+already installed — my earlier note saying otherwise was wrong.
+
+Ran the T1053.003 cron attack again on linux-target. This time
+Wazuh raised a proper alert at level 10, with the description
+"Cron persistence: file written to a cron directory".
+
+This gives me a clear before-and-after:
+- Before (default Wazuh): event was recorded but scored 0, so no alert
+- After (my rule): event scored 10, alert raised
+Nothing else changed — only the rule.
+
+The logs captured the whole attack: a temporary file was created in
+the cron folder and then renamed to become root's crontab. The command
+that did it was `crontab /tmp/persistevil`.
+
+Worth noting: one attack produced three separate alerts, because the
+rule matches on the cron label and the attack touched three system
+calls. Good to discuss later when I look at false positives and how
+much noise an analyst would face. I haven't decided whether to tune it.
+
+Small tidy-up for later: the rule is sitting in a section labelled for
+SSH rules. It works, but it's in the wrong place.
+
+Next: capture the T1059.004 screenshot, then continue with the
+remaining seven techniques.
 ---
+
