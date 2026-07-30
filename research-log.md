@@ -415,5 +415,64 @@ SSH rules. It works, but it's in the wrong place.
 
 Next: capture the T1059.004 screenshot, then continue with the
 remaining seven techniques.
+
+### T1059.004 — logtest evidence captured
+Ran the atomic again and pulled the audit line into logtest on the manager.
+Result: rule 80700, level 0. Wazuh decoded every field but raised no alert.
+Gap confirmed and evidenced. Custom rule still to be written.
+
+Note: the shell execution itself was hard to isolate in the audit log. The
+detectable telemetry actually came from the child process the script spawned
+(ping). Says something about how visible this technique really is at the
+audit layer — worth a mention in the results chapter.
+
+Also noticed: my own commands (grep, tail, sudo, ausearch) generate audit
+events constantly, and they bury the attack events I'm looking for. That's
+the background noise level on a monitored host before any custom rule exists.
+Useful for the false-positive discussion.
+
+### T1082 — no Linux test available
+Atomic Red Team returned "Found 0 atomic tests applicable to linux platform".
+So T1082 joins the list of techniques needing a custom test, alongside
+T1110.001, T1098.004 and T1070.002. Four ART gaps now, not three.
+No result recorded — nothing was tested, so it isn't a detection failure.
+
+### T1070.003 — clearing bash history
+First attempt failed: /root/.bash_history didn't exist, so there was nothing
+to delete. Created the file, re-ran, and the test succeeded. Worth remembering
+that some atomic tests assume state a clean lab doesn't have — a failed test
+isn't always a detection gap.
+
+My own Auditd watch caught it properly, recording both the file creation and
+the deletion. Key is history_tamper (I'd wrongly assumed bash_history and got
+a false negative until I checked with auditctl -l — always verify key names).
+
+Wazuh's verdict: rule 80700, level 0, no alert. Same as the others.
+
+This is the clearest gap I've documented so far. I wrote the audit rule
+specifically to watch this file, it worked exactly as intended, the key came
+through named in the decoder output, and Wazuh still stayed silent. The
+sensor did its job; the SIEM didn't act on it.
+
+One caution: alerts.log did show rule 5402 "Successful sudo to ROOT" matching
+on the filename, but that's only because the path appeared in my sudo command
+line. Not a detection. An attacker deleting the file without sudo would
+produce nothing.
+
+### Unexpected: false-positive evidence
+While searching the audit log I found my own bash session had triggered the
+history_tamper watch twice at 14:57, just from normally saving shell history.
+
+So a Wazuh rule keyed naively on history_tamper would alert every time any
+user closes a shell. Good to know before writing the rule rather than after —
+the rule should key on deletion or truncation specifically (the rm command,
+or the DELETE nametype) instead of any access to the file.
+
+### Where things stand
+Four techniques with results: T1136.001, T1059.004, T1053.003, T1070.003.
+T1082 needs a custom test. Five still to baseline.
+
+Next: continue baseline on remaining techniques, and write the custom rules
+for T1059.004 and T1070.003.
 ---
 
