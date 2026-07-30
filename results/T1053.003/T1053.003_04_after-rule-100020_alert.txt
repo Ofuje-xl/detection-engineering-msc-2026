@@ -1,0 +1,22 @@
+jeffrey@wazuh-mgr:~$ sudo grep -A5 "100020" /var/ossec/logs/alerts/alerts.log | tail -30
+[sudo] password for jeffrey:
+Rule: 100020 (level 10) -> 'Cron persistence: file written to a cron directory (T1053.003)'
+type=SYSCALL msg=audit(1785421437.972:3613): arch=c000003e syscall=257 success=yes exit=4 a0=ffffff9c a1=651550fc31c0 a2=c2 a3=180 items=2 ppid=3382 pid=3385 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=990 sgid=990 fsgid=990 tty=pts1 ses=1 comm="crontab" exe="/usr/bin/crontab" subj=unconfined key="cron"ARCH=x86_64 SYSCALL=openat AUID="jeffrey" UID="root" GID="root" EUID="root" SUID="root" FSUID="root" EGID="crontab" SGID="crontab" FSGID="crontab" type=CWD msg=audit(1785421437.972:3613): cwd="/var/spool/cron" type=PATH msg=audit(1785421437.972:3613): item=0 name="crontabs/" inode=524731 dev=fc:00 mode=041730 ouid=0 ogid=990 rdev=00:00 nametype=PARENT cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0OUID="root" OGID="crontab" type=PATH msg=audit(1785421437.972:3613): item=1 name="crontabs/tmp.weqIZk" inode=524371 dev=fc:00 mode=0100600 ouid=0 ogid=990 rdev=00:00 nametype=CREATE cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0OUID="root" OGID="crontab" type=PROCTITLE msg=audit(1785421437.972:3613): proctitle=63726F6E746162002F746D702F706572736973746576696C
+audit.type: SYSCALL
+audit.id: 3613
+audit.arch: c000003e
+audit.syscall: 257
+--
+Rule: 100020 (level 10) -> 'Cron persistence: file written to a cron directory (T1053.003)'
+type=SYSCALL msg=audit(1785421437.975:3614): arch=c000003e syscall=91 success=yes exit=0 a0=4 a1=180 a2=722e8fc01ee0 a3=6515616c3f90 items=1 ppid=3382 pid=3385 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=990 sgid=990 fsgid=990 tty=pts1 ses=1 comm="crontab" exe="/usr/bin/crontab" subj=unconfined key="cron"ARCH=x86_64 SYSCALL=fchmod AUID="jeffrey" UID="root" GID="root" EUID="root" SUID="root" FSUID="root" EGID="crontab" SGID="crontab" FSGID="crontab" type=CWD msg=audit(1785421437.975:3614): cwd="/var/spool/cron" type=PATH msg=audit(1785421437.975:3614): item=0 name=(null) inode=524371 dev=fc:00 mode=0100600 ouid=0 ogid=990 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0OUID="root" OGID="crontab" type=PROCTITLE msg=audit(1785421437.975:3614): proctitle=63726F6E746162002F746D702F706572736973746576696C
+audit.type: SYSCALL
+audit.id: 3614
+audit.arch: c000003e
+audit.syscall: 91
+--
+Rule: 100020 (level 10) -> 'Cron persistence: file written to a cron directory (T1053.003)'
+type=SYSCALL msg=audit(1785421437.975:3615): arch=c000003e syscall=82 success=yes exit=0 a0=651550fc31c0 a1=7fffaee655a0 a2=0 a3=ffffffff items=4 ppid=3382 pid=3385 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=990 sgid=990 fsgid=990 tty=pts1 ses=1 comm="crontab" exe="/usr/bin/crontab" subj=unconfined key="cron"ARCH=x86_64 SYSCALL=rename AUID="jeffrey" UID="root" GID="root" EUID="root" SUID="root" FSUID="root" EGID="crontab" SGID="crontab" FSGID="crontab" type=CWD msg=audit(1785421437.975:3615): cwd="/var/spool/cron" type=PATH msg=audit(1785421437.975:3615): item=0 name="crontabs/" inode=524731 dev=fc:00 mode=041730 ouid=0 ogid=990 rdev=00:00 nametype=PARENT cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0OUID="root" OGID="crontab" type=PATH msg=audit(1785421437.975:3615): item=1 name="crontabs/" inode=524731 dev=fc:00 mode=041730 ouid=0 ogid=990 rdev=00:00 nametype=PARENT cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0OUID="root" OGID="crontab" type=PATH msg=audit(1785421437.975:3615): item=2 name="crontabs/tmp.weqIZk" inode=524371 dev=fc:00 mode=0100600 ouid=0 ogid=990 rdev=00:00 nametype=DELETE cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0OUID="root" OGID="crontab" type=PATH msg=audit(1785421437.975:3615): item=3 name="crontabs/root" inode=524371 dev=fc:00 mode=0100600 ouid=0 ogid=990 rdev=00:00 nametype=CREATE cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0OUID="root" OGID="crontab" type=PROCTITLE msg=audit(1785421437.975:3615): proctitle=63726F6E746162002F746D702F706572736973746576696C
+audit.type: SYSCALL
+audit.id: 3615
+audit.arch: c000003e
+audit.syscall: 82
