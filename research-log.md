@@ -474,5 +474,106 @@ T1082 needs a custom test. Five still to baseline.
 
 Next: continue baseline on remaining techniques, and write the custom rules
 for T1059.004 and T1070.003.
+
+## 2026-07-31 — Baseline evaluation complete (10/10)
+
+Finished the baseline today. All ten techniques now have results.
+
+### What ran
+
+Checked what Atomic Red Team actually offers before running anything —
+worth doing, because my earlier notes were wrong. T1110.001 and T1098.004
+both have Linux tests after all. Only T1082 and T1070.002 genuinely needed
+custom scripts, not four techniques as I'd assumed.
+
+- T1098.004 (SSH authorized keys) — my ssh_key_change watch caught it.
+  Wazuh: rule 80700, level 0.
+- T1105 (download and run) — curl execution captured. Wazuh: 80700, level 0.
+  Note: audit only sees curl running, not what was downloaded or from where.
+- T1110.001 (sudo brute force) — DETECTED. Rules 5401 and 5503, level 5.
+- T1078.003 (create local account) — DETECTED. Rules 5901 and 5902, level 8.
+- T1082 (system info discovery) — custom script. Wazuh: 80700, level 0.
+- T1070.002 (clear logs) — custom script. Wazuh: 80700, level 0.
+
+### The main finding
+
+Ten techniques, and the split is completely clean:
+
+Three techniques reached Wazuh through journald. All three raised proper
+alerts at levels 5-8, no custom rules needed.
+
+Seven techniques reached Wazuh through Auditd. All seven ended at rule
+80700, level 0, no alert. Every single one. Different tactics, different
+syscalls, different keys — same result. It didn't matter whether the audit
+rule came from the Neo23x0 set or whether I wrote it myself.
+
+So this isn't seven separate gaps. It's one structural thing: Wazuh's
+default rules don't act on Auditd telemetry at all beyond grouping it.
+The sensors work fine. Nothing downstream uses what they produce.
+
+That also changes how I describe my custom rules. They're not tuning
+something that half works — they're supplying detection that isn't there.
+
+### Things that nearly went wrong
+
+Three atomic tests failed silently but still returned exit code 0:
+- T1098.004 is wrapped in an `if [ -f ... ]` check
+- T1078.003 refused because user 'art' already existed from the T1110.001
+  test I'd run twenty minutes earlier
+- T1070.003 yesterday, same pattern
+
+Lesson: exit code 0 doesn't mean the test ran. I need to verify the attack
+actually happened in the audit log before recording any result. Also need
+to use -Cleanup between tests so they stop interfering with each other.
+
+### Found old persistence still running
+
+While looking at something else I spotted /bin/sh -c /tmp/evil.sh executing
+as root every minute. Turned out root's crontab still had an entry from the
+T1053.003 test, and /etc/cron.d/persistevil had been sitting there since
+17 July — two weeks.
+
+The cron persistence tests worked properly, in other words, and I never
+cleaned up after them. Removed both. Captured evidence first.
+
+This matters for two reasons. Anything I'd measured for false positives
+before today would have been contaminated by root-level executions firing
+every minute. And it shows the technique genuinely persists, which is worth
+saying in the write-up.
+
+### One result that needs care
+
+T1070.002's truncate command did appear in an alert — rule 5402, level 3.
+But 5402 is "Successful sudo to ROOT executed" and it fires for every sudo
+command. Four other 5402 alerts in the same minute were just me running
+ausearch and tail.
+
+So the command string is in the log, but nothing identified it as log
+tampering. An attacker already running as root would generate nothing at
+all. Recording it as a gap, not a detection. Worth writing up properly —
+an alert containing the attack isn't the same as an alert about the attack.
+
+### Also worth noting
+
+T1082 is a different kind of gap from the others. `uname` runs constantly
+as normal system background activity — I saw several instances with no
+terminal attached. A rule alerting on it would never stop firing. So Wazuh
+staying quiet here might be the right call rather than a failure. Need to
+distinguish that in the results chapter from the cases where silence is
+genuinely a problem.
+
+Audit IDs went from about 6,000 yesterday to 45,000 today. Roughly 39,000
+audit events in a day on a lab VM doing almost nothing. That's the noise
+level any detection rule has to work against.
+
+### Where things stand
+
+Objective 3 done — baseline complete for all ten techniques.
+
+Next is Objective 4: custom rules for the seven gaps. Rule 100020 for cron
+already proves the approach works. From the false positive I found yesterday,
+I know not to key rules naively on the audit key alone — the history_tamper
+rule needs to target deletion specifically, or it'll alert every time anyone
+closes a shell.
 ---
 
