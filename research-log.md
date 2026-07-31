@@ -575,5 +575,144 @@ already proves the approach works. From the false positive I found yesterday,
 I know not to key rules naively on the audit key alone — the history_tamper
 rule needs to target deletion specifically, or it'll alert every time anyone
 closes a shell.
+
+## 2026-07-31 (afternoon) — First custom rules for the Auditd gaps
+
+Started Objective 4. Rule 100020 for cron already worked, so today was
+about writing rules for the other gaps and learning what the platform
+will and won't let me express.
+
+### Rule 100021 — history tampering (T1070.003)
+
+Wrote this one deliberately differently from 100020. Rule 100020 matches
+only on the audit key, which is why it fires three times for a single
+cron attack — every syscall in the operation carries the same key.
+
+100021 requires two things instead of one: the history_tamper key AND
+the command being rm, truncate or shred.
+
+```xml
+<rule id="100021" level="10">
+  <if_group>audit</if_group>
+  <field name="audit.key">history_tamper</field>
+  <field name="audit.command">^rm$|^truncate$|^shred$</field>
+  <description>History tampering: shell history file deleted or truncated (T1070.003)</description>
+  <mitre>
+    <id>T1070.003</id>
+  </mitre>
+</rule>
+```
+
+The command condition exists because of the false positive I found
+yesterday: normal bash writes to .bash_history every time a shell
+closes, and that has audit.command = bash. Excluding it by design
+rather than discovering it after deployment.
+
+Deployed, restarted the manager, re-ran atomic test 1.
+
+Result: fired at level 10, and importantly it fired ONCE, not three
+times like 100020. The command filter did what it was meant to. Alert
+carried full context — nametype=DELETE on /root/.bash_history, proctitle
+decoding to `rm /root/.bash_history`.
+
+Worth comparing the two rules directly in the results chapter. Same
+technique class, one rule keyed naively on the audit key producing three
+alerts per attack, the other filtered on command producing one. Evidence
+that rule design affects analyst workload, measured rather than asserted.
+
+### Testing the rule's limits — and finding them
+
+Then ran atomic test 3, which clears history a different way:
+
+    cat /dev/null > ~/.bash_history
+
+No alert. That's correct behaviour, not a failure, and it's worth
+explaining properly because it took me a while to understand.
+
+The `>` is the shell redirecting output. The shell opens the file and
+empties it — cat just supplies nothing to write. So Auditd records the
+command as bash, not cat. My rule requires rm/truncate/shred, so it
+declines to match.
+
+Which means an attacker who avoids the obvious commands walks straight
+past this rule. Four of the ten atomic tests for T1070.003 use methods
+100021 won't catch.
+
+I'd rather document that than claim the technique is covered. Saying
+"T1070.003 detected" would be exactly the overclaim Virkud et al. (2024)
+criticise — coverage at technique level concealing which procedures are
+actually detected.
+
+### Options considered for closing that gap
+
+Looked at three ways to catch the redirection variant:
+
+**File Integrity Monitoring (syscheck).** Watches the file for changes
+in size, hash and mtime regardless of how the change happened. This is
+the architecturally right answer — it watches the outcome, not the
+method. Not implemented yet; FIM on a home directory may be noisy and
+needs testing before I commit to it.
+
+**Match the truncation at syscall level.** When the shell does `> file`
+it opens with the O_TRUNC flag, and that flag IS present in the raw
+audit record (the a2 value). But Wazuh's auditd decoder doesn't expose
+a0-a3 as fields — I can see this in my own logtest Phase 2 output, which
+shows audit.syscall and audit.command but no argument registers. So the
+flag never reaches the rule engine. Dead end without writing a custom
+decoder, which is out of scope.
+
+**Low-level rule plus correlation.** A second rule matching
+history_tamper with comm=bash at level 0-3 — wouldn't alert alone but
+would be available for frequency or correlation rules. Possible later.
+
+Not implementing any of these for now. Recording the limitation.
+
+### The bigger question this raised
+
+Realised something uncomfortable while writing 100021. Chapter 2 argues
+that behavioural detection is better than signature matching. But my
+rule matches on a list of command strings — change the string, evade the
+rule. Mechanically that is signature matching, just of commands rather
+than file hashes.
+
+Thought about it and I don't think the Chapter 2 argument is wrong, but
+it needs qualifying. Detection sits on a spectrum rather than in two
+boxes:
+
+- artefact signature (this exact file hash)
+- command indicator (this command touching this class of file) — where
+  100021 sits
+- behavioural (this outcome occurred, whatever the method) — FIM
+- anomaly (this deviates from normal for this host)
+
+100021 is more general than a hash: it doesn't care which user, which
+session, which path, or what the file contained. But it's less general
+than true behavioural detection.
+
+The useful point for the dissertation is the reason WHY it sits there.
+It isn't laziness — it's that Wazuh's auditd decoder doesn't expose the
+fields needed to express "the file was emptied" as a rule condition.
+Only "these commands ran" can be written.
+
+So there's a gap between what ATT&CK asks defenders to do (detect
+behaviours) and what an open-source SIEM's telemetry and rule syntax
+actually permit. That's an implementation gap, evidenced from my own
+lab, and it's a stronger contribution than claiming I did behavioural
+detection and hoping nobody checks.
+
+### Tracker updates
+
+T1070.003: Custom Rule ID 100021, Deployed Yes, Post-Rule Result
+"Detected by custom rule", Post-Rule Level 10.
+
+### Next
+
+Six custom rules still to write. T1098.004 is the easiest — any write to
+authorized_keys is suspicious, so it needs no command filter and should
+be a clean single-condition rule.
+
+Also still to do: write Sigma versions of 100020 and 100021, commit the
+live local_rules.xml to the repo so it can't drift from what's actually
+running.
 ---
 
