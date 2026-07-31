@@ -1,0 +1,41 @@
+jeffrey@wazuh-mgr:~$ echo 'type=SYSCALL msg=audit(1785492707.475:3851): arch=c000003e syscall=257 success=yes exit=3 a0=ffffff9c a1=61cc2f8e88e8 a2=241 a3=1b6 items=2 ppid=3487 pid=3511 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=22 comm="sh" exe="/usr/bin/dash" subj=unconfined key="ssh_key_change"' | sudo /var/ossec/bin/wazuh-logtest
+Starting wazuh-logtest v4.13.1
+Type one log per line
+
+
+**Phase 1: Completed pre-decoding.
+        full event: 'type=SYSCALL msg=audit(1785492707.475:3851): arch=c000003e syscall=257 success=yes exit=3 a0=ffffff9c a1=61cc2f8e88e8 a2=241 a3=1b6 items=2 ppid=3487 pid=3511 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=22 comm="sh" exe="/usr/bin/dash" subj=unconfined key="ssh_key_change"'
+
+**Phase 2: Completed decoding.
+        name: 'auditd'
+        parent: 'auditd'
+        audit.arch: 'c000003e'
+        audit.auid: '1000'
+        audit.command: 'sh'
+        audit.egid: '0'
+        audit.euid: '0'
+        audit.exe: '/usr/bin/dash'
+        audit.exit: '3'
+        audit.fsgid: '0'
+        audit.fsuid: '0'
+        audit.gid: '0'
+        audit.id: '3851'
+        audit.key: 'ssh_key_change'
+        audit.pid: '3511'
+        audit.ppid: '3487'
+        audit.session: '22'
+        audit.sgid: '0'
+        audit.success: 'yes'
+        audit.suid: '0'
+        audit.syscall: '257'
+        audit.tty: 'pts1'
+        audit.type: 'SYSCALL'
+        audit.uid: '0'
+
+**Phase 3: Completed filtering (rules).
+        id: '80700'
+        level: '0'
+        description: 'Audit: Messages grouped.'
+        groups: '['audit']'
+        firedtimes: '1'
+        mail: 'False'
