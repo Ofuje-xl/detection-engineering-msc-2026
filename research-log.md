@@ -711,8 +711,47 @@ Six custom rules still to write. T1098.004 is the easiest — any write to
 authorized_keys is suspicious, so it needs no command filter and should
 be a clean single-condition rule.
 
-Also still to do: write Sigma versions of 100020 and 100021, commit the
-live local_rules.xml to the repo so it can't drift from what's actually
-running.
+2026-08-04 — Cowrie protocol-layer detection working (multi-layer proven)
+
+Went back to the honeypot today because I realised Cowrie and the Kali attacker VM had barely been used — all ten baseline techniques were run on the target directly, so the protocol layer of the architecture had no results behind it. That's a problem, because the whole premise of the dissertation is detection across two telemetry layers, not one.
+
+The old problem, finally explained
+
+I remembered Cowrie "not working" before — you'd SSH in, enter a password, and it would hang with a blank screen. Turns out that's the emulated shell failing to load, not a logging failure. Kali runs OpenSSH 10.0, and Cowrie's fake interactive shell doesn't render properly for modern clients.
+
+But that doesn't matter for detection. The events my rules watch for — connection, failed login, successful login — are all logged by Cowrie the moment they happen, before the shell ever loads. So the hang is cosmetic as far as the results are concerned. Worth stating clearly in the write-up: protocol-layer detection is fully functional; only post-login command emulation is degraded, and none of my rules depend on it.
+
+What I ran
+
+Confirmed Cowrie was up (docker container, port 2222) and that the Wazuh agent forwards /opt/cowrie/var/log/cowrie/cowrie.json. Honeypot is at 192.168.56.30, attacker (Kali) at 192.168.56.40.
+
+From Kali, SSH'd into the honeypot with root/wrongpass. Checked the Cowrie JSON log — the whole session was captured: client version, key exchange with SSH fingerprint, and the login event.
+
+Results — both rules fired
+
+On the manager:
+
+Rule 100013 (level 5) — new SSH connection from 192.168.56.40, logged the instant the connection opened
+Rule 100012 (level 10) — successful root login, captured username, password, and source IP
+
+So I now have real detection results at the protocol layer, sitting alongside the ten host-layer results. The multi-layer architecture is demonstrated, not just described. Cowrie and Kali have earned their place.
+
+The finding worth drawing out
+
+Same story on both layers. My custom Cowrie rules fired at levels 5 and 10 because I wrote them. My custom Auditd rules produced level 0 under the default config until I wrote rules for those too. In both cases the raw telemetry was fine and the default platform did nothing useful with it — detection came only from rules I authored. Open-source SIEM supplies the pipeline; the detection engineering is the contribution. That holds across both telemetry layers, which strengthens the argument rather than complicating it.
+
+Two honest caveats
+
+Cowrie accepted root/wrongpass as a SUCCESS. Its default userdb accepts almost any password for root, so rule 100012 (success) and 100013 (connect) fire readily, but generating a genuine FAILED login for rule 100011 needs userdb configuration. Either configure it or note as future work.
+
+The lab isn't as isolated as the methodology currently claims. The honeypot VM has two interfaces — 192.168.56.30 on VMnet2 (the lab network) and 192.168.138.153 on a DHCP subnet with internet access. That second interface is why the target could reach 8.8.8.8 earlier. Need to describe the network accurately: isolated on one interface, internet-reachable on another, rather than fully air-gapped.
+
+Evidence
+
+results/cowrie/cowrie_01_login-success-and-connect_alerts.png
+
+Next
+
+Back to the Results chapter. Section 4.1 (baseline) drafted. The Cowrie result gives 4.2 or a dedicated protocol-layer subsection real material.
 ---
 
