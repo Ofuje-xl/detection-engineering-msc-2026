@@ -1,0 +1,22 @@
+jeffrey@wazuh-mgr:~$ sudo tail -300 /var/ossec/logs/alerts/alerts.log | grep -B2 -A6 "10001"
+[sudo] password for jeffrey:
+** Alert 1785841584.6073: - local,syslog,sshd,connection_attempt,cowrie,
+2026 Aug 04 11:06:24 (cowrie-hp) any->/opt/cowrie/var/log/cowrie/cowrie.json
+Rule: 100013 (level 5) -> 'Cowrie: new SSH connection from 192.168.56.40'
+{"eventid":"cowrie.session.connect","src_ip":"192.168.56.40","src_port":51616,"dst_ip":"172.17.0.2","dst_port":2222,"session":"3d6b16199a01","protocol":"ssh","message":"New connection: 192.168.56.40:51616 (172.17.0.2:2222) [session: 3d6b16199a01]","sensor":"39067ca4b307","uuid":"e0b4cdae-7ab7-11f1-a47d-ca7ee344b146","timestamp":"2026-08-04T11:05:20.497288Z"}
+eventid: cowrie.session.connect
+src_ip: 192.168.56.40
+src_port: 51616
+dst_ip: 172.17.0.2
+dst_port: 2222
+--
+** Alert 1785841584.6975: - local,syslog,sshd,authentication_success,cowrie,
+2026 Aug 04 11:06:24 (cowrie-hp) any->/opt/cowrie/var/log/cowrie/cowrie.json
+Rule: 100012 (level 10) -> 'Cowrie: successful login to honeypot from 192.168.56.40 - user root - possible credential harvest'
+{"eventid":"cowrie.login.success","username":"root","password":"wrongpass","message":"login attempt [root/wrongpass] succeeded","sensor":"39067ca4b307","uuid":"e0b4cdae-7ab7-11f1-a47d-ca7ee344b146","timestamp":"2026-08-04T11:05:26.336169Z","src_ip":"192.168.56.40","session":"3d6b16199a01","protocol":"ssh"}
+eventid: cowrie.login.success
+username: root
+password: wrongpass
+message: login attempt [root/wrongpass] succeeded
+sensor: 39067ca4b307
+jeffrey@wazuh-mgr:~$
