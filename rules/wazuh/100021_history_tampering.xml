@@ -1,0 +1,27 @@
+<!--
+  Detection: Shell history tampering (MITRE ATT&CK T1070.003 - Indicator Removal: Clear Command History)
+
+  Author: Jeffrey Ofuje Adegoke
+  Telemetry source: Auditd (system-call layer), custom watch on .bash_history tagged key="history_tamper"
+
+  Rationale:
+  Baseline Wazuh 4.13 decodes the event and extracts audit.key="history_tamper" together with
+  audit.command, but scores it level 0 (rule 80700). This rule requires BOTH the history_tamper
+  key AND a destructive command, so that normal shell writes to the history file (recorded with
+  the shell as audit.command) do not match. This design also avoids the alert multiplication
+  seen with rule 100020, which matches on the key alone and fires once per system call.
+  Known limitation: does not match redirection-based clearing (cat /dev/null > ~/.bash_history),
+  as the shell performs the write. See dissertation Section 4.3.
+  Deployed in: /var/ossec/etc/rules/local_rules.xml on wazuh-mgr
+-->
+<group name="audit,history_tampering,">
+  <rule id="100021" level="10">
+    <if_group>audit</if_group>
+    <field name="audit.key">history_tamper</field>
+    <field name="audit.command">^rm$|^truncate$|^shred$</field>
+    <description>History tampering: shell history file deleted or truncated (T1070.003)</description>
+    <mitre>
+      <id>T1070.003</id>
+    </mitre>
+  </rule>
+</group>
