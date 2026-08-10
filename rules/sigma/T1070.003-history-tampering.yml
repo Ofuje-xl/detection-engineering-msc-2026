@@ -1,0 +1,35 @@
+title: Shell History File Deleted or Truncated
+id: c1d4b8a5-7e2f-4a93-9c60-3b8e1f0d5a27
+status: experimental
+description: >
+    Detects deletion or truncation of shell history files using destructive
+    commands, an indicator-removal technique (MITRE ATT&CK T1070.003).
+    Corresponds to Wazuh rule 100021. Requires both the history-tamper watch
+    key and a destructive command, so that normal shell writes to the history
+    file (recorded with the shell as the command) do not match. Known
+    limitation: does not match redirection-based clearing
+    (cat /dev/null > ~/.bash_history), which is performed by the shell itself.
+author: Jeffrey Ofuje Adegoke
+date: 2026/08/04
+references:
+  - https://attack.mitre.org/techniques/T1070/003/
+logsource:
+  product: linux
+  service: auditd
+detection:
+  selection:
+    type: 'SYSCALL'
+    key: 'history_tamper'
+  command:
+    comm:
+      - 'rm'
+      - 'truncate'
+      - 'shred'
+  condition: selection and command
+falsepositives:
+  - Administrator manually clearing their own shell history
+  - Cleanup or log-rotation scripts that remove history files
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.t1070.003
