@@ -1,0 +1,24 @@
+<!--
+  Detection: SSH authorized_keys persistence (MITRE ATT&CK T1098.004 - Account Manipulation: SSH Authorized Keys)
+  Author: Jeffrey Ofuje Adegoke
+  Telemetry source: Auditd (system-call layer), custom watch on authorized_keys tagged key="ssh_key_change"
+  Rationale:
+  Baseline Wazuh 4.13 decodes the auditd event and extracts audit.key="ssh_key_change" but scores it
+  level 0 (rule 80700), so no alert is raised. This rule matches on the audit key alone. No command
+  filter is applied: the watch is already bound to a specific file, so the key identifies the resource
+  rather than a broad category. Filtering on command would exclude modification via tee, sed, an
+  editor, or shell redirection, reproducing the procedure-coverage limitation observed with rule 100021.
+  Decoder constraint: audit.file.name is defined in the auditd decoder but was not populated for these
+  events, so a path-based condition was not available.
+  Deployed in: /var/ossec/etc/rules/local_rules.xml on wazuh-mgr
+-->
+<group name="audit,ssh_key_persistence,">
+  <rule id="100022" level="10">
+    <if_group>audit</if_group>
+    <field name="audit.key">ssh_key_change</field>
+    <description>SSH persistence: authorized_keys file modified (T1098.004)</description>
+    <mitre>
+      <id>T1098.004</id>
+    </mitre>
+  </rule>
+</group>
