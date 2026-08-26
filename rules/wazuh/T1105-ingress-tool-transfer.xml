@@ -1,0 +1,38 @@
+<!--
+  Detection: Potential ingress tool transfer
+  MITRE ATT&CK: T1105 - Ingress Tool Transfer
+  Author: Jeffrey Ofuje Adegoke
+  Telemetry source: Auditd (system-call layer)
+  Required Auditd key: process_creation
+
+  Detection rationale:
+  This rule identifies execution of common download utilities (curl or wget).
+  It is assigned level 8 rather than level 10 because utility execution is
+  evidence warranting investigation, but does not by itself establish that
+  an ingress tool transfer occurred.
+
+  Evaluated decoder limitation:
+  During testing, the raw EXECVE record contained the command arguments,
+  including the requested URL. However, the corresponding audit.execve.a0-a7
+  fields were not populated in Wazuh's decoded output. The rule therefore
+  could not match on transfer arguments or destination and uses utility
+  execution only as a proxy for potential ingress tool transfer.
+
+  Evaluated configuration:
+  The process_creation key was provided by the deployed Auditd ruleset.
+
+  Wazuh deployment path:
+  /var/ossec/etc/rules/local_rules.xml
+-->
+
+<group name="audit,ingress_transfer,">
+  <rule id="100024" level="8">
+    <if_group>audit</if_group>
+    <field name="audit.key">process_creation</field>
+    <field name="audit.command">^curl$|^wget$</field>
+    <description>Potential ingress tool transfer: download utility executed (T1105)</description>
+    <mitre>
+      <id>T1105</id>
+    </mitre>
+  </rule>
+</group>
