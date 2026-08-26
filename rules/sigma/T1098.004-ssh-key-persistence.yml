@@ -1,0 +1,34 @@
+title: SSH Authorized Keys Modification
+id: 3f9a2c81-6d47-4b05-a8e3-91c4d7f2b6a0
+status: experimental
+description: >
+  Detects modification of SSH authorized_keys files through a dedicated
+  Auditd watch tagged with the ssh_key_change key. The detection is mapped
+  to MITRE ATT&CK T1098.004 and corresponds to Wazuh rule 100022. The rule
+  intentionally matches on the audit key rather than a specific modifying
+  command so that alternative modification procedures remain detectable.
+author: Jeffrey Ofuje Adegoke
+date: 2026/08/24
+
+references:
+  - https://attack.mitre.org/techniques/T1098/004/
+
+logsource:
+  product: linux
+  service: auditd
+
+detection:
+  selection:
+    type: 'SYSCALL'
+    key: 'ssh_key_change'
+  condition: selection
+
+falsepositives:
+  - Administrator adding or rotating a legitimate SSH key
+  - Configuration management tooling deploying authorized keys
+
+level: high
+
+tags:
+  - attack.persistence
+  - attack.t1098.004
