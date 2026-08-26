@@ -1,19 +1,31 @@
 <!--
-  Detection: Shell history tampering (MITRE ATT&CK T1070.003 - Indicator Removal: Clear Command History)
-
+  Detection: Shell history tampering
+  MITRE ATT&CK: T1070.003 - Clear Command History
   Author: Jeffrey Ofuje Adegoke
-  Telemetry source: Auditd (system-call layer), custom watch on .bash_history tagged key="history_tamper"
+  Telemetry source: Auditd (system-call layer)
+  Required Auditd key: history_tamper
 
-  Rationale:
-  Baseline Wazuh 4.13 decodes the event and extracts audit.key="history_tamper" together with
-  audit.command, but scores it level 0 (rule 80700). This rule requires BOTH the history_tamper
-  key AND a destructive command, so that normal shell writes to the history file (recorded with
-  the shell as audit.command) do not match. This design also avoids the alert multiplication
-  seen with rule 100020, which matches on the key alone and fires once per system call.
-  Known limitation: does not match redirection-based clearing (cat /dev/null > ~/.bash_history),
-  as the shell performs the write. See dissertation Section 4.3.
-  Deployed in: /var/ossec/etc/rules/local_rules.xml on wazuh-mgr
+  Detection rationale:
+  Baseline Wazuh 4.13 decoded the event and exposed
+  audit.key="history_tamper" together with audit.command, but the
+  event terminated at rule 80700, level 0, so no actionable alert
+  was generated.
+
+  This rule requires both the history_tamper key and a destructive
+  command. This excludes normal shell-history writes, which are
+  recorded with the shell as audit.command, and reduces the alert
+  multiplication observed with Rule 100020.
+
+  Known limitation:
+  The rule does not detect redirection-based history clearing, such
+  as writing /dev/null to .bash_history, because the shell performs
+  the write and audit.command therefore records the shell rather than
+  rm, truncate, or shred. See dissertation Section 4.3.
+
+  Wazuh deployment path:
+  /var/ossec/etc/rules/local_rules.xml
 -->
+
 <group name="audit,history_tampering,">
   <rule id="100021" level="10">
     <if_group>audit</if_group>
