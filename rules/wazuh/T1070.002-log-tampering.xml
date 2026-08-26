@@ -1,0 +1,33 @@
+<!--
+  Detection: Linux log tampering
+  MITRE ATT&CK: T1070.002 - Indicator Removal: Clear Linux Logs
+  Author: Jeffrey Ofuje Adegoke
+  Telemetry source: Auditd (system-call layer)
+
+  Required Auditd key: log_tamper
+
+  Detection rationale:
+  Existing telemetry could not reliably scope rm or truncate execution to
+  authentication log files using the decoded fields available to Wazuh.
+  A dedicated Auditd watch was therefore required.
+
+  Evaluated sensor limitation:
+  During testing, /var/log/wtmp and /var/log/btmp were already monitored
+  under the "session" key by the deployed Auditd ruleset. Events for those
+  paths continued to use the existing key, so the evaluated rule reliably
+  covered /var/log/auth.log only.
+
+  Wazuh deployment path:
+  /var/ossec/etc/rules/local_rules.xml
+-->
+
+<group name="audit,log_tampering,">
+  <rule id="100023" level="10">
+    <if_group>audit</if_group>
+    <field name="audit.key">log_tamper</field>
+    <description>Linux log tampering: monitored authentication log modified (T1070.002)</description>
+    <mitre>
+      <id>T1070.002</id>
+    </mitre>
+  </rule>
+</group>
