@@ -1,85 +1,115 @@
 # Detection Engineering MSc 2026
 
-> Evaluating ATT&CK-based detection engineering for Linux systems using Cowrie, Auditd, and Wazuh telemetry.
+> Evaluating ATT&CK-Based Detection Engineering for Linux Systems Using Cowrie,
+> Auditd, and Wazuh Telemetry.
 
-![Status](https://img.shields.io/badge/status-in%20progress-yellow)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![University](https://img.shields.io/badge/MSc%20Cybersecurity-University%20of%20Sunderland-007a33)
+This repository contains the laboratory configuration, detection rules,
+evaluation artefacts, and supporting materials developed for an MSc
+Cybersecurity dissertation at the University of Sunderland.
 
-This repository contains the lab infrastructure, detection rules, evaluation methodology, and supporting materials for my MSc Cybersecurity dissertation at the University of Sunderland, expected August 2026.
+## Project overview
 
-## What this project does
+This project evaluates ATT&CK-aligned detection engineering for Linux systems
+using the open-source Wazuh SIEM and telemetry from Cowrie and Auditd.
 
-It runs a controlled set of known attacker techniques against a purpose-built Linux lab, then measures how well an open-source SIEM (Wazuh) detects each one using telemetry from two sources: the Cowrie SSH honeypot at the protocol layer, and Linux Auditd at the system-call layer. Where the default Wazuh ruleset misses an attack, custom detection rules are developed in Sigma format and translated to Wazuh's native syntax. The headline deliverable is a detection coverage matrix mapped to the MITRE ATT&CK framework, accompanied by measured false-positive rates against benign baseline activity.
+Ten MITRE ATT&CK techniques relevant to SSH and Linux post-compromise activity
+were executed in a controlled laboratory. Each technique was evaluated against
+the baseline Wazuh configuration by verifying attack execution, confirming
+telemetry capture, and recording the resulting Wazuh rule and alert level.
+
+Where baseline detection was insufficient, custom detection logic was developed
+and evaluated. Controlled benign scenarios were subsequently used to examine
+false-positive behaviour and rule specificity.
 
 ## Research question
 
-To what extent can an open-source SIEM (Wazuh), combined with multi-layer telemetry from Cowrie and Auditd, reliably detect a defined set of MITRE ATT&CK techniques relevant to Linux post-compromise activity, and at what false-positive rate against realistic benign activity?
+To what extent can an open-source SIEM (Wazuh), combined with multi-layer
+telemetry from Cowrie and Auditd, reliably detect a defined set of MITRE ATT&CK
+techniques relevant to Linux post-compromise activity, and at what false-positive
+rate against realistic benign activity?
 
-## Why this matters
+## Evaluation approach
 
-Most academic detection engineering research targets enterprise SOCs with budgets for commercial SIEM platforms. Very little research evaluates open-source detection capability through the lens of small organisations and managed service providers, which are the dominant real-world consumers of free SIEM. This project addresses three specific gaps in the literature:
+The evaluation uses two principal telemetry layers:
 
-- **Rigorous false-positive measurement** against realistic benign activity (most papers report detection rate without measuring false-positive rate)
-- **MSP and SME framing** of detection capability evaluation
-- **Multi-layer telemetry evaluation** comparing protocol-level (Cowrie) and system-level (Auditd) detection visibility per ATT&CK technique
+- **Protocol layer — Cowrie:** captures SSH authentication and session activity.
+- **System-call layer — Auditd:** captures host-level activity including process
+  execution, file access, and other audited system events.
 
-## Closest published precedent
+Wazuh aggregates and processes this telemetry using its existing ruleset and
+project-developed detection rules.
 
-Winkler, A.M. and Sharma, P. (2025) "Proactive Threat Detection in Enterprise Systems Using Wazuh: A MITRE ATT&CK Evaluation," *Computers & Security*, 159. This project extends their evaluation framework by adding false-positive measurement, post-compromise tactics (Execution, Discovery, Defense Evasion, Persistence, Credential Access), and multi-layer telemetry.
+The evaluation follows four stages:
 
-## Lab architecture
+1. Execute and verify each ATT&CK technique.
+2. Establish the baseline Wazuh detection outcome.
+3. Develop and deploy custom detection logic for suitable identified gaps.
+4. Re-execute attack procedures and test implemented rules against controlled
+   benign activity.
 
-The lab runs on VMware Workstation and consists of three virtual machines:
+## Key findings
 
-- **Ubuntu target** with Linux Auditd configured for system-call and authentication auditing
-- **Cowrie SSH honeypot** for protocol-level capture of SSH attack sessions
-- **Wazuh SIEM** for log ingestion, decoding, correlation, and alerting
+Baseline evaluation produced a clear telemetry-path distinction. Three techniques
+observed through journald generated actionable alerts, while seven techniques
+observed through Auditd were captured and decoded but terminated at Wazuh rule
+80700, level 0.
 
-A network diagram will live in `lab/diagrams/` once drafted.
+Five custom Wazuh rules (100020–100024) were implemented for selected Auditd
+detection gaps. Two additional gaps, T1082 (System Information Discovery) and
+T1059.004 (Unix Shell), were not assigned standalone alerting rules because the
+available telemetry did not provide sufficiently discriminative conditions for
+reliable alerting.
+
+The evaluation also demonstrated that successful ATT&CK mapping does not imply
+comprehensive procedure coverage. Detection effectiveness depended on the
+specific procedure, available telemetry, fields exposed by the Wazuh decoder,
+and the specificity of the detection rule.
+
+Controlled benign testing further demonstrated the trade-off between detection
+coverage and precision. Broad key-only matching produced substantially more
+benign matches than more specific detection conditions.
+
+## Detection rules
+
+Five custom Wazuh rules were implemented and evaluated:
+
+| ATT&CK technique | Wazuh rule | Level | Detection condition |
+|---|---:|---:|---|
+| T1053.003 Cron | 100020 | 10 | Auditd `cron` key |
+| T1070.003 Clear Command History | 100021 | 10 | Auditd `history_tamper` key + `rm`, `truncate`, or `shred` |
+| T1098.004 SSH Authorized Keys | 100022 | 10 | Auditd `ssh_key_change` key |
+| T1070.002 Clear Linux or Mac System Logs | 100023 | 10 | Auditd `log_tamper` key |
+| T1105 Ingress Tool Transfer | 100024 | 8 | Auditd `process_creation` key + `curl` or `wget` |
+
+The rules are provided in Sigma and Wazuh formats where applicable. Known
+false-positive, decoder, telemetry, and procedure-coverage limitations are
+documented alongside the detection content.
+
+See [`rules/`](rules/) for the detection content and detailed documentation.
+
+## Laboratory architecture
+
+The controlled laboratory consists of four hosts:
+
+- **Wazuh manager** — central telemetry ingestion, decoding and alerting.
+- **Ubuntu target** — Linux endpoint instrumented with Auditd.
+- **Cowrie SSH honeypot** — protocol-level SSH telemetry source.
+- **Attacker host** — used to execute the selected ATT&CK procedures.
+
+The environment was isolated from unsolicited external access and used solely
+for controlled experimental testing.
 
 ## Repository structure
 
-```
+```text
 .
-├── dissertation/        Drafts of the dissertation chapters
-├── lab/                 VM configurations, network diagrams, install scripts
-├── rules/               Sigma + Wazuh custom detection rules
-├── atomic-tests/        Selected Atomic Red Team test mappings
-├── results/             Test outputs and the detection coverage matrix
-├── references/          Annotated literature
-└── research-log.md      Daily research journal
-```
-
-## Tooling
-
-- [Wazuh](https://wazuh.com/) - open-source SIEM and XDR platform
-- [Cowrie](https://github.com/cowrie/cowrie) - medium-interaction SSH/Telnet honeypot
-- [Auditd](https://linux.die.net/man/8/auditd) - Linux audit subsystem
-- [Atomic Red Team](https://github.com/redcanaryco/atomic-red-team) - reproducible attack test framework mapped to MITRE ATT&CK
-- [Sigma](https://github.com/SigmaHQ/sigma) - generic SIEM detection rule format
-- [MITRE ATT&CK](https://attack.mitre.org/) - knowledge base of adversary tactics and techniques
-
-## Status
-
-This project is in active development. Expected submission: August 2026.
-
-| Milestone | Target | Status |
-|-----------|--------|--------|
-| Workspace setup | Week 1 | In progress |
-| Lab build | Week 2 | Not started |
-| ATT&CK technique selection | Week 3 | Not started |
-| Baseline evaluation | Weeks 4-6 | Not started |
-| Custom rule development | Weeks 7-8 | Not started |
-| False-positive evaluation | Weeks 9-10 | Not started |
-| Coverage matrix and dissertation writing | Weeks 11-12 | Not started |
-
-## Author
-
-Jeffrey Ofuje Adegoke  
-MSc Cybersecurity, University of Sunderland  
-[Portfolio](https://ofuje-xl.github.io) | [GitHub](https://github.com/Ofuje-xl) 
-
-## Licence
-
-MIT, see [LICENSE](LICENSE).
+├── dissertation/        Dissertation-related material
+├── lab/                 Laboratory configuration and supporting material
+├── rules/
+│   ├── sigma/           Vendor-neutral detection rules
+│   ├── wazuh/           Wazuh implementations
+│   └── auditd/          Auditd configuration required by custom rules
+├── atomic-tests/        ATT&CK/Atomic Red Team test mappings
+├── results/             Evaluation results and coverage matrix
+├── references/          Research material
+└── research-log.md      Experimental research log
