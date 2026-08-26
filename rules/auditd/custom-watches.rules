@@ -1,0 +1,35 @@
+## Project-specific Auditd watches
+## Evaluating ATT&CK-Based Detection Engineering for Linux Systems
+## Author: Jeffrey Ofuje Adegoke
+##
+## These watches supplement the Neo23x0 Auditd ruleset used in the
+## experimental laboratory and support Wazuh rules 100021-100023.
+##
+## Deployment:
+## Copy this file to /etc/audit/rules.d/detection-engineering.rules
+## and load the rules with:
+##   sudo augenrules --load
+##
+## Paths under /home/jeffrey reflect the evaluated laboratory.
+## Replace these paths as appropriate when adapting the rules to
+## another Linux environment.
+
+## Command-history tampering (T1070.003) - supports Wazuh rule 100021
+-w /root/.bash_history -p wa -k history_tamper
+-w /home/jeffrey/.bash_history -p wa -k history_tamper
+
+## SSH authorized_keys persistence (T1098.004) - supports Wazuh rule 100022
+-w /root/.ssh/authorized_keys -p wa -k ssh_key_change
+-w /home/jeffrey/.ssh/authorized_keys -p wa -k ssh_key_change
+
+## Log tampering (T1070.002) - supports Wazuh rule 100023
+-w /var/log/auth.log -p wa -k log_tamper
+-w /var/log/wtmp -p wa -k log_tamper
+-w /var/log/btmp -p wa -k log_tamper
+
+## Evaluated limitation:
+## /var/log/wtmp and /var/log/btmp were already watched under the
+## "session" key by the deployed Neo23x0 ruleset. During testing,
+## events for these paths continued to use the existing key despite
+## the additional watches being loaded. Rule 100023 was therefore
+## validated as reliably covering /var/log/auth.log only.
