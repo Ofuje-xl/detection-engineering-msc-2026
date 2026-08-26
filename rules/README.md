@@ -3,53 +3,126 @@
 Custom detection content developed for the dissertation *Evaluating ATT&CK-Based
 Detection Engineering for Linux Systems Using Cowrie, Auditd, and Wazuh Telemetry*.
 
-Each rule exists in two forms. The Sigma rule in `sigma/` expresses the detection
-logic in a vendor-neutral format. The Wazuh rule in `wazuh/` is the platform-specific
-implementation deployed to the manager. Authoring in Sigma before translating keeps
-the detection content portable rather than tied to this deployment.
+The repository contains Sigma detection logic and corresponding Wazuh
+implementations developed and evaluated in a controlled Linux laboratory. Sigma
+provides a platform-independent representation of the detection logic, while the
+Wazuh rules represent the implementation deployed during the evaluation.
 
 ## Why these rules exist
 
-Baseline evaluation of ten ATT&CK techniques found that every technique observed
-through the Linux Auditing System was decoded correctly by Wazuh 4.13 and then
-scored at level 0 under rule 80700 ("Audit: Messages grouped"), producing no alert.
-The telemetry was present and complete; no technique-specific detection logic
-existed to act on it. These rules supply that logic.
+Baseline evaluation of ten MITRE ATT&CK techniques identified seven techniques
+whose Auditd telemetry was captured and decoded by Wazuh 4.13 but terminated at
+rule 80700, level 0, producing no actionable alert.
+
+Five of these baseline gaps were taken forward into implemented custom rules
+(100020–100024). Standalone rules were not implemented for T1082 (System
+Information Discovery) and T1059.004 (Unix Shell) because the observed Auditd
+fields did not provide sufficient context to distinguish the evaluated adversary
+behaviour reliably from routine Linux activity.
+
+The resulting rules demonstrate that the presence of telemetry does not by itself
+constitute detection: actionable alerting depends on detection logic and on the
+fields made available to that logic.
 
 ## Rules
 
-| ATT&CK | Rule ID | Level | Detects |
-|---|---|---|---|
-| T1053.003 Scheduled Task/Job: Cron | 100020 | 10 | File written to a cron directory |
-| T1070.003 Indicator Removal: Clear Command History | 100021 | 10 | Shell history file deleted or truncated |
+| ATT&CK technique | Wazuh rule | Level | Detection condition |
+|---|---:|---:|---|
+| T1053.003 Cron | 100020 | 10 | Auditd `cron` key |
+| T1070.003 Clear Command History | 100021 | 10 | `history_tamper` key + `rm`, `truncate`, or `shred` |
+| T1098.004 SSH Authorized Keys | 100022 | 10 | Auditd `ssh_key_change` key |
+| T1070.002 Clear Linux or Mac System Logs | 100023 | 10 | Auditd `log_tamper` key |
+| T1105 Ingress Tool Transfer | 100024 | 8 | `process_creation` key + `curl` or `wget` |
 
-### Design note
+## Detection design
 
-The two rules differ deliberately in how narrowly they match.
+### Rule 100020 — Cron persistence
 
-Rule 100020 matches on the audit key alone. It detects reliably but fires once per
-system call, producing three alerts for a single cron persistence action.
+Rule 100020 intentionally uses broad key-only matching. It converted the
+baseline level-0 outcome into an actionable alert, but controlled benign testing
+showed low specificity: all six benign cron scenarios generated at least one
+alert. Individual operations could also generate multiple alerts because
+multiple associated Auditd events carried the same `cron` key.
 
-Rule 100021 requires the audit key **and** a destructive command. This prevents the
-multiplication seen in 100020, and excludes the false positive observed at baseline,
-where the same audit key is recorded whenever a shell writes to its history file
-during normal operation.
+The rule is therefore experimental and requires additional contextual filtering
+before operational deployment.
 
-### Known limitation
+### Rule 100021 — Command-history tampering
 
-Rule 100021 does not detect redirection-based history clearing
-(`cat /dev/null > ~/.bash_history`), because the shell performs the write and the
-event records the shell as the command rather than a deletion command. Four of the
-ten Atomic Red Team tests for this technique use methods the rule does not match.
-The behaviour "the file was emptied" cannot be expressed as a rule condition on this
-platform, as the relevant syscall flag is not exposed by Wazuh's auditd decoder.
+Rule 100021 requires both the `history_tamper` Auditd key and execution of
+`rm`, `truncate`, or `shred`. This increased specificity relative to Rule 100020
+and reduced alert multiplication and benign matches.
+
+The additional specificity introduces a procedure-coverage limitation. The rule
+does not detect redirection-based history clearing because the shell performs
+the write and is therefore recorded as the command. In the evaluated
+configuration, the syscall information required to identify truncation
+independently of the command was present in the raw Auditd record but was not
+available as a decoded field for Wazuh rule matching.
+
+### Rule 100022 — SSH authorized keys persistence
+
+Rule 100022 detects events tagged with the `ssh_key_change` key generated by a
+dedicated Auditd watch on `authorized_keys`. The rule intentionally avoids a
+command filter so that modification through different utilities or shell
+mechanisms remains detectable.
+
+Legitimate administrator or configuration-management changes to authorized keys
+can produce equivalent events. In addition, the affected path was present in
+the raw Auditd PATH record but was not populated in the decoded
+`audit.file.name` field during testing.
+
+### Rule 100023 — Log tampering
+
+Rule 100023 required additional sensor configuration because the existing Auditd
+keys did not provide sufficient resource context. A dedicated `log_tamper` watch
+was introduced.
+
+In the evaluated configuration, `/var/log/wtmp` and `/var/log/btmp` were already
+monitored under the `session` key and continued to generate events using that
+key. Rule 100023 was therefore validated as reliably covering
+`/var/log/auth.log` only.
+
+### Rule 100024 — Potential ingress tool transfer
+
+Rule 100024 detects execution of `curl` or `wget` under the `process_creation`
+Auditd key. It is assigned Wazuh level 8 because execution of a download utility
+is a proxy for potential ingress tool transfer rather than evidence that a
+transfer successfully occurred.
+
+The raw EXECVE telemetry contained command arguments, including the requested
+URL during testing, but the corresponding decoded argument fields were not
+populated. The evaluated rule therefore matches utility execution rather than
+transfer-specific arguments.
+
+## Auditd dependencies
+
+Several rules depend on Auditd keys generated by either the deployed Auditd
+ruleset or project-specific watches. These sensor-side dependencies must be
+configured before the corresponding Wazuh rules can operate as intended.
+
+Project-specific Auditd configuration should be stored separately in the
+`auditd/` directory so that the telemetry requirements can be reproduced
+alongside the detection rules.
 
 ## Deployment
 
-Rules are deployed to `/var/ossec/etc/rules/local_rules.xml` on the Wazuh manager.
-The manager requires a restart before a newly added rule takes effect.
+Wazuh implementations are deployed to:
 
-## Status
+`/var/ossec/etc/rules/local_rules.xml`
 
-Both rules are marked `experimental`: validated in the project laboratory, not
-tested in production.
+on the Wazuh manager. Rule syntax should be validated before restarting the
+manager. The corresponding Auditd watches or rules must also be present on the
+monitored Linux endpoint.
+
+## Status and limitations
+
+All rules are marked `experimental`. They were developed and evaluated in the
+controlled laboratory used for the dissertation and have not been validated in
+a production environment.
+
+The rules should not be interpreted as comprehensive coverage of their mapped
+ATT&CK techniques. Detection depends on the procedure used, available Auditd
+telemetry, Wazuh decoder output, and the specificity of each rule. The repository
+therefore documents known false-positive and procedure-coverage limitations
+alongside the detection logic.
