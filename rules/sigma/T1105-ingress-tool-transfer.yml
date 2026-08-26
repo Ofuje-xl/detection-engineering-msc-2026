@@ -1,0 +1,42 @@
+title: Download Utility Executed
+id: 199bf87d-aff2-41c8-8f2c-aeb301f67e8f
+status: experimental
+description: >
+  Detects execution of common download utilities as a proxy indicator for
+  ingress tool transfer (MITRE ATT&CK T1105). Corresponds to Wazuh rule
+  100024. The rule establishes that curl or wget executed, not that a
+  transfer occurred, and is therefore assigned medium severity. In the
+  evaluated Wazuh configuration, the requested URL was present in the raw
+  Auditd EXECVE record but was not exposed through the corresponding decoded
+  argument fields, preventing transfer arguments from being included in the
+  detection condition.
+author: Jeffrey Ofuje Adegoke
+date: 2026/08/24
+
+references:
+  - https://attack.mitre.org/techniques/T1105/
+
+logsource:
+  product: linux
+  service: auditd
+
+detection:
+  selection:
+    type: 'SYSCALL'
+    key: 'process_creation'
+  command:
+    comm:
+      - 'curl'
+      - 'wget'
+  condition: selection and command
+
+falsepositives:
+  - Legitimate administrative use of curl or wget
+  - Automated scripts using curl or wget
+  - Health checks and API requests using these utilities
+
+level: medium
+
+tags:
+  - attack.command_and_control
+  - attack.t1105
