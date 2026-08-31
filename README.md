@@ -102,6 +102,35 @@ The controlled laboratory consists of four hosts:
 
 The environment was isolated from unsolicited external access and used solely
 for controlled experimental testing.
+## Reproducing the Evaluation
+
+The repository contains the artefacts required to reproduce the principal stages of the evaluation. The experimental workflow was:
+
+1. **Configure the laboratory environment**  
+   Deploy the Wazuh manager, instrumented Ubuntu target, Cowrie SSH honeypot, and Kali Linux attacker within the isolated laboratory network.
+
+2. **Configure telemetry collection**  
+   Configure Auditd on the Linux target and Wazuh agents to forward Auditd and Cowrie telemetry to the Wazuh manager.
+
+3. **Establish baseline detection behaviour**  
+   Execute each selected ATT&CK procedure against the default Wazuh ruleset and record the telemetry source, matched rule, alert level, and detection outcome.
+
+4. **Verify attack execution**  
+   Confirm that the intended behaviour occurred using the underlying sensor telemetry. A successful test exit code alone was not treated as sufficient evidence of successful execution.
+
+5. **Develop and deploy custom detection rules**  
+   For identified Auditd-derived detection gaps, inspect the available decoded fields, author detection logic in Sigma where sufficiently discriminative conditions can be established, and implement the corresponding Wazuh-native rules.
+
+6. **Re-execute the attack procedures**  
+   Repeat the relevant procedures after rule deployment and record changes in rule matching and alert generation.
+
+7. **Conduct controlled benign testing**  
+   Execute defined legitimate administrative and user activities and record whether each custom rule also triggers on non-malicious behaviour.
+
+8. **Analyse detection outcomes**  
+   Compare baseline and post-rule results while considering telemetry availability, rule specificity, procedure coverage, benign triggering, and identified decoder or sensor limitations.
+
+See the [`lab/`](lab/), [`atomic-tests/`](atomic-tests/), [`rules/`](rules/), and [`results/`](results/) directories for the corresponding configurations, procedures, detection content, and experimental evidence.
 
 ## Repository structure
 
