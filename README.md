@@ -23,10 +23,7 @@ false-positive behaviour and rule specificity.
 
 ## Research question
 
-To what extent can an open-source SIEM (Wazuh), combined with multi-layer
-telemetry from Cowrie and Auditd, reliably detect a defined set of MITRE ATT&CK
-techniques relevant to Linux post-compromise activity, and at what false-positive
-rate against realistic benign activity?
+To what extent can Wazuh, supported by Cowrie and Auditd telemetry, reliably detect selected Linux post-compromise techniques, and what false-positive behaviour is observed when custom detection rules are evaluated against controlled benign activity?
 
 ## Evaluation approach
 
