@@ -70,7 +70,7 @@ specific procedure, available telemetry, fields exposed by the Wazuh decoder,
 and the specificity of the detection rule.
 
 Controlled benign testing further demonstrated the trade-off between detection
-coverage and precision. Broad key-only matching produced substantially more
+coverage and rule specificity. Broad key-only matching produced substantially more
 benign matches than more specific detection conditions.
 
 ## Detection rules
