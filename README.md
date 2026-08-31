@@ -102,6 +102,7 @@ The controlled laboratory consists of four hosts:
 
 The environment was isolated from unsolicited external access and used solely
 for controlled experimental testing.
+
 ## Reproducing the Evaluation
 
 The repository contains the artefacts required to reproduce the principal stages of the evaluation. The experimental workflow was:
@@ -113,7 +114,7 @@ The repository contains the artefacts required to reproduce the principal stages
    Configure Auditd on the Linux target and Wazuh agents to forward Auditd and Cowrie telemetry to the Wazuh manager.
 
 3. **Establish baseline detection behaviour**  
-   Execute each selected ATT&CK procedure against the default Wazuh ruleset and record the telemetry source, matched rule, alert level, and detection outcome.
+   Execute the selected ATT&CK procedures using Atomic Red Team where applicable. The Atomic Red Team framework and its technique-specific tests are available from the official Atomic Red Team repository. Project-developed custom test scripts used during this evaluation are provided in atomic-tests/
 
 4. **Verify attack execution**  
    Confirm that the intended behaviour occurred using the underlying sensor telemetry. A successful test exit code alone was not treated as sufficient evidence of successful execution.
@@ -130,6 +131,19 @@ The repository contains the artefacts required to reproduce the principal stages
 8. **Analyse detection outcomes**  
    Compare baseline and post-rule results while considering telemetry availability, rule specificity, procedure coverage, benign triggering, and identified decoder or sensor limitations.
 
+## Experimental Evidence
+
+Experimental evidence is organised by ATT&CK technique in the [`results/`](results/) directory. The repository retains evidence from baseline testing, custom-rule evaluation, and controlled benign testing to support traceability between the reported findings and the underlying Wazuh and Auditd outputs.
+
+Key evidence can be accessed through:
+
+- **Technique-level results:** [`results/`](results/) — evidence associated with the evaluated ATT&CK techniques and their detection outcomes.
+- **Controlled benign testing:** [`results/false-positives/`](results/false-positives/) — evidence showing benign triggering behaviour observed during custom-rule evaluation.
+- **Custom detection rules:** [`rules/`](rules/) — Sigma and Wazuh detection logic together with documented rule limitations.
+- **Attack procedures:** [`atomic-tests/`](atomic-tests/) — Atomic Red Team and custom procedures used during the evaluation.
+- **Laboratory configuration:** [`lab/`](lab/) — configuration artefacts supporting the experimental environment.
+
+These artefacts should be interpreted alongside the dissertation, which provides the methodology, classification criteria, analysis, and limitations associated with the experimental results.
 See the [`lab/`](lab/), [`atomic-tests/`](atomic-tests/), [`rules/`](rules/), and [`results/`](results/) directories for the corresponding configurations, procedures, detection content, and experimental evidence.
 
 ## Repository structure
