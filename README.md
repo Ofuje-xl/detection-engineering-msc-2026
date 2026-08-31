@@ -1,11 +1,18 @@
-# Detection Engineering MSc 2026
 
-> Evaluating ATT&CK-Based Detection Engineering for Linux Systems Using Cowrie,
-> Auditd, and Wazuh Telemetry.
+## Dissertation
 
-This repository contains the laboratory configuration, detection rules,
-evaluation artefacts, and supporting materials developed for an MSc
-Cybersecurity dissertation at the University of Sunderland.
+This repository accompanies the MSc Cybersecurity dissertation:
+
+**Evaluating ATT&CK-Based Detection Engineering for Linux Systems Using Cowrie, Auditd, and Wazuh Telemetry**
+
+**Author:** Jeffrey Ofuje Adegoke  
+**Institution:** University of Sunderland  
+**Programme:** MSc Cybersecurity  
+**Year:** 2026
+
+The repository contains the practical research artefacts produced during the study, including custom Sigma and Wazuh detection rules, Auditd configurations, reproducible attack procedures, controlled benign-testing evidence, and technique-level detection results.
+
+The dissertation provides the authoritative analysis and interpretation of the experimental findings. The artefacts in this repository are provided to support transparency, traceability, and reproducibility.
 
 ## Project overview
 
