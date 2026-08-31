@@ -140,7 +140,7 @@ Key evidence can be accessed through:
 - **Technique-level results:** [`results/`](results/) — evidence associated with the evaluated ATT&CK techniques and their detection outcomes.
 - **Controlled benign testing:** [`results/false-positives/`](results/false-positives/) — evidence showing benign triggering behaviour observed during custom-rule evaluation.
 - **Custom detection rules:** [`rules/`](rules/) — Sigma and Wazuh detection logic together with documented rule limitations.
-- **Attack procedures:** [`atomic-tests/`](atomic-tests/) — Atomic Red Team and custom procedures used during the evaluation.
+- **Custom test scripts:** [`atomic-tests/`](atomic-tests/) — project-developed scripts used for selected ATT&CK behaviours not reproduced directly from Atomic Red Team. External Atomic Red Team procedures used during the evaluation are available from the official [https://github.com/redcanaryco/atomic-red-team] .
 - **Laboratory configuration:** [`lab/`](lab/) — configuration artefacts supporting the experimental environment.
 
 These artefacts should be interpreted alongside the dissertation, which provides the methodology, classification criteria, analysis, and limitations associated with the experimental results.
