@@ -55,7 +55,7 @@ and reduced alert multiplication and benign matches.
 
 The additional specificity introduces a procedure-coverage limitation. The rule
 does not detect redirection-based history clearing because the shell performs
-the write and is therefore recorded as the command. In the evaluated
+the write and is therefore recorded as the command. Consequently, successful detection of the evaluated command-based procedure should not be interpreted as comprehensive coverage of T1070.003.In the evaluated
 configuration, the syscall information required to identify truncation
 independently of the command was present in the raw Auditd record but was not
 available as a decoded field for Wazuh rule matching.
@@ -123,6 +123,4 @@ a production environment.
 
 The rules should not be interpreted as comprehensive coverage of their mapped
 ATT&CK techniques. Detection depends on the procedure used, available Auditd
-telemetry, Wazuh decoder output, and the specificity of each rule. The repository
-therefore documents known false-positive and procedure-coverage limitations
-alongside the detection logic.
+telemetry, Wazuh decoder output, and the specificity of each rule. The repository therefore documents observed benign-triggering behaviour, known procedure-coverage limitations, and telemetry or decoder constraints alongside the detection logic.
